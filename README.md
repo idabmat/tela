@@ -1,5 +1,9 @@
 # Tela
 
+---
+
+[![Hex.pm](https://img.shields.io/hexpm/v/tela.svg)](https://hex.pm/packages/tela) [![Documentation](https://img.shields.io/badge/documentation-gray)](https://hexdocs.pm/tela/)
+
 A zero-dependency Elixir library for building interactive terminal UIs using the
 [Elm Architecture](https://guide.elm-lang.org/architecture/).
 
