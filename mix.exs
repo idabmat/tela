@@ -42,7 +42,12 @@ defmodule Tela.MixProject do
     [
       main: "Tela",
       source_url: @source_url,
-      source_ref: "v#{@version}"
+      source_ref: "v#{@version}",
+      extras: ["README.md", "CHANGELOG.md"],
+      groups_for_modules: [
+        Components: [Tela.Component, Tela.Component.Spinner, Tela.Component.TextInput],
+        Internals: [Tela.Input, Tela.Renderer, Tela.Terminal, Tela.Runtime]
+      ]
     ]
   end
 end

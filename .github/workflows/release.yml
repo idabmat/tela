@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.19"
+          otp-version: "28"
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: dialyzer-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+      - run: mix deps.get --only dev
+      - run: mix format --check-formatted
+      - name: Check @moduledoc coverage
+        run: |
+          if grep -r '@moduledoc false' lib/; then
+            echo "error: @moduledoc false found in lib/" >&2
+            exit 1
+          fi
+      - run: mix docs
+      - run: mix deps.get --only test
+      - run: mix test
+      - run: mix dialyzer
+
+  publish:
+    name: Publish to Hex.pm
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.19"
+          otp-version: "28"
+      - uses: actions/cache@v4
+        with:
+          path: deps
+          key: deps-${{ hashFiles('mix.lock') }}
+      - run: mix deps.get --only dev
+      - run: mix hex.publish --yes
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+
+  release:
+    name: Create GitHub Release
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract CHANGELOG notes
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          awk '/^## \['"${VERSION}"'\]/{found=1; next} found && /^## /{exit} found{print}' CHANGELOG.md \
+            | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
+            | awk 'NF{found=1} found' \
+            > release_notes.txt
+      - run: gh release create "${{ github.ref_name }}" --title "${{ github.ref_name }}" --notes-file release_notes.txt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
