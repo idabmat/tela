@@ -1,0 +1,11 @@
+/_build/
+/cover/
+/deps/
+/doc/
+/tmp/
+erl_crash.dump
+*.ez
+/.direnv/
+/.mix/
+/.hex/
+/.envrc.local
